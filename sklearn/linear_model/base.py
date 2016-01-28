@@ -249,8 +249,10 @@ class LinearClassifierMixin(ClassifierMixin):
             raise ValueError("X has %d features per sample; expecting %d"
                              % (X.shape[1], n_features))
 
-        scores = safe_sparse_dot(X, self.coef_.T,
-                                 dense_output=True) + self.intercept_
+        # temporary hack: see https://github.com/scikit-learn/scikit-learn/issues/6186
+        if getattr(self, 'coef_T', None) is None:
+            self.coef_T = np.ascontiguousarray(self.coef_.T)
+        scores = safe_sparse_dot(X, self.coef_T, dense_output=True) + self.intercept_
         return scores.ravel() if scores.shape[1] == 1 else scores
 
     def predict(self, X):
